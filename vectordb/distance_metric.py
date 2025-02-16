@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from .types import Vector, FloatType
+from .types import Vector
 
 
 class DistanceMetric(ABC):

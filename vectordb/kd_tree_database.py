@@ -3,7 +3,7 @@ from typing import Callable, Dict, Generic, List, Optional, Sequence, Tuple, Typ
 import numpy as np
 
 from .distance_metric import DistanceMetric, EuclideanDistance
-from .db import DatabaseEntry, VectorDatabase
+from .database import DatabaseEntry, VectorDatabase
 from .types import FloatType, Vector, VectorID
 
 

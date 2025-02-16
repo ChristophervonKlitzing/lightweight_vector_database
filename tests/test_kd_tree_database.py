@@ -1,8 +1,8 @@
 from typing import List
 import unittest
 
-from vectordb.db import VectorID
-from vectordb.kd_tree import KDTreeDatabase
+from vectordb.database import VectorID
+from vectordb.kd_tree_database import KDTreeDatabase
 import numpy as np
 
 
