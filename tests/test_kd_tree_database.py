@@ -25,6 +25,7 @@ class TestKDTreeDatabase(unittest.TestCase):
             db.insert(np.random.random(db.dim), f"data[{i}]")
         
         self.assertEqual(len(db), num_inserts)
+        self.assertEqual(len(db), db._debug_compute_length_from_tree())
 
     def test_insert_delete_and_len(self):
         db = _setup_test_db()
@@ -48,6 +49,7 @@ class TestKDTreeDatabase(unittest.TestCase):
             self.assertEqual(db._debug_compute_length_from_tree(), current_num_entries)
 
         self.assertEqual(db.get_tree_depth(), 0)
+        self.assertEqual(len(db), db._debug_compute_length_from_tree())
 
     def test_k_nearest_neighbors(self):
         db = _setup_test_db(2)
@@ -62,6 +64,8 @@ class TestKDTreeDatabase(unittest.TestCase):
         entry, squared_dist = neighbors[0]
         self.assertTrue(np.array_equal(entry.position, position))
         self.assertEqual(squared_dist, 0.0)
+
+        self.assertEqual(len(db), db._debug_compute_length_from_tree())
     
     def test_operations_on_empty(self):
         db = _setup_test_db()
@@ -69,6 +73,25 @@ class TestKDTreeDatabase(unittest.TestCase):
         self.assertEqual(len(db), 0)
         neighbors = db.find_k_nearest_neighbors(np.zeros(db.dim), k=10)
         self.assertEqual(len(neighbors), 0)
+
+        self.assertEqual(len(db), db._debug_compute_length_from_tree())
+    
+    def test_update_position(self):
+        db = _setup_test_db()
+        id = db.insert(np.zeros(db.dim), "awd")
+
+        new_position = np.ones(db.dim)
+        db.update_position(id, new_position)
+
+        self.assertEqual(len(db), 1)
+        neighbors = db.find_k_nearest_neighbors(np.zeros(db.dim), k=10)
+        self.assertEqual(len(neighbors), 1)
+        
+        entry, dist = neighbors[0]
+        self.assertGreater(dist, 0)
+        self.assertTrue(np.array_equal(entry.position, new_position))
+
+        self.assertEqual(len(db), db._debug_compute_length_from_tree())
 
 if __name__ == '__main__':
     unittest.main()

@@ -290,6 +290,12 @@ class KDTreeDatabase(VectorDatabase[T]):
     def __len__(self) -> int:
         return len(self._id_access)
     
+    def update_position(self, id: VectorID, new_position: Vector):
+        entry = self._id_access.get(id)
+        self._id_access[id] = DatabaseEntry(new_position, entry.metadata)
+        self._tree.delete(id, entry.position)
+        self._tree.insert(id, new_position)
+    
     def _debug_compute_length_from_tree(self):
         return len(self._tree)
     

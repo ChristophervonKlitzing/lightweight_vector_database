@@ -47,12 +47,9 @@ class VectorDatabase(ABC, Generic[T]):
         """
         raise NotImplementedError
 
-    """
     @abstractmethod
     def update_position(self, id: VectorID, new_position: Vector):
         raise NotImplementedError
-    
-    """
 
     @abstractmethod
     def delete(self, id: VectorID) -> Optional[DatabaseEntry[T]]:
