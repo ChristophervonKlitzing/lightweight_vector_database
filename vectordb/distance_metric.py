@@ -26,7 +26,8 @@ class DistanceMetric(ABC):
 
 class EuclideanDistance(DistanceMetric):
     def squared_point_2_point_distance(self, p1: Vector, p2: Vector) -> np.floating:
-        return np.dot(p1, p2)
+        vec = p2 - p1
+        return np.dot(vec, vec)
     
     def squared_point_2_plane_distance(self, p: Vector, n: Vector, x_0) -> np.floating:
         return np.dot(n, p - x_0)**2 / np.dot(n, n)

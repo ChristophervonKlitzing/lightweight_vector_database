@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass 
-from typing import Callable, Generic, Iterable, Optional, Tuple, TypeVar
+from typing import Callable, Generic, Optional, Sequence, Tuple, TypeVar
 import numpy as np
 
 from .distance_metric import DistanceMetric
@@ -18,6 +18,11 @@ T = TypeVar('T')
 class VectorDatabase(ABC, Generic[T]):
     def __init__(self):
         super().__init__()
+
+    @property
+    @abstractmethod
+    def dim(self) -> int:
+        raise NotImplementedError
     
     @abstractmethod
     def insert(self, position: Vector, metadata: T) -> VectorID:
@@ -30,11 +35,12 @@ class VectorDatabase(ABC, Generic[T]):
         k: int, 
         filter: Optional[Callable[[T], bool]] = None,
         distance_metric: Optional[DistanceMetric] = None,
-    ) -> Iterable[Tuple[DatabaseEntry[T], np.floating]]:
+    ) -> Sequence[Tuple[DatabaseEntry[T], np.floating]]:
         """
         Computes the k nearest neighbors to the given position that 
         satisfy the filter (filter returns True) using the defined distance metric.
-        The default distance metric (if none is specified) is the euclidean distance (2-norm).
+        The default distance metric (if none is specified) is the default distance
+        metric is used.
 
         Returns:
             The k nearest neighbors and their squared distances to the given position.
@@ -59,3 +65,4 @@ class VectorDatabase(ABC, Generic[T]):
     @abstractmethod
     def __len__(self) -> int:
         raise NotImplementedError
+    
