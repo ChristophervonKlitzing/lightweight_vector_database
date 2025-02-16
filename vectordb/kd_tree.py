@@ -1,7 +1,11 @@
 from dataclasses import dataclass
-from typing import Dict, Generic, List, Optional, Tuple, TypeVar
-from .db import DatabaseEntry, FloatType, Vector, VectorDatabase, VectorID
+from typing import Callable, Dict, Generic, Iterable, List, Optional, Tuple, TypeVar
 import numpy as np
+
+from .distance_metric import DistanceMetric
+from .db import DatabaseEntry, VectorDatabase
+from .types import FloatType, Vector, VectorID
+
 
 
 @dataclass(frozen=True)
@@ -179,6 +183,15 @@ class KDTreeDatabase(VectorDatabase[T]):
             self._tree.is_leaf = True
         
         return entry 
+
+    def find_k_nearest_neighbors(
+        self, 
+        position: Vector, 
+        k: int, 
+        filter: Optional[Callable[[T], bool]] = None,
+        distance_metric: Optional[DistanceMetric] = None,
+    ) -> Iterable[Tuple[DatabaseEntry[T], np.floating]]:
+        raise NotImplementedError
     
     def __len__(self) -> int:
         return len(self._id_access)

@@ -1,12 +1,10 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass 
-import numpy as np 
-from typing import Callable, Generic, Iterable, Optional, TypeVar
+from typing import Callable, Generic, Iterable, Optional, Tuple, TypeVar
+import numpy as np
 
-
-VectorID = int 
-FloatType = np.float32
-Vector = np.ndarray[FloatType]
+from .distance_metric import DistanceMetric
+from .types import Vector, VectorID
 
 
 T = TypeVar('T')
@@ -25,16 +23,25 @@ class VectorDatabase(ABC, Generic[T]):
     def insert(self, position: Vector, metadata: T) -> VectorID:
         raise NotImplementedError
     
-    """
     @abstractmethod
     def find_k_nearest_neighbors(
         self, 
         position: Vector, 
         k: int, 
-        filter: Optional[Callable[[T], bool]] = None
-    ) -> Iterable[DatabaseEntry[T]]:
+        filter: Optional[Callable[[T], bool]] = None,
+        distance_metric: Optional[DistanceMetric] = None,
+    ) -> Iterable[Tuple[DatabaseEntry[T], np.floating]]:
+        """
+        Computes the k nearest neighbors to the given position that 
+        satisfy the filter (filter returns True) using the defined distance metric.
+        The default distance metric (if none is specified) is the euclidean distance (2-norm).
+
+        Returns:
+            The k nearest neighbors and their squared distances to the given position.
+        """
         raise NotImplementedError
 
+    """
     @abstractmethod
     def update_position(self, id: VectorID, new_position: Vector):
         raise NotImplementedError
@@ -49,7 +56,6 @@ class VectorDatabase(ABC, Generic[T]):
     def get_entry(self, id: VectorID) -> Optional[DatabaseEntry[T]]:
         raise NotImplementedError
     
-
     @abstractmethod
     def __len__(self) -> int:
         raise NotImplementedError
