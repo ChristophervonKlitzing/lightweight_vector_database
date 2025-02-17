@@ -7,3 +7,6 @@ K-nearest neighbor search can be done with **custom distance metrics**!
 ```
 pip install git+https://github.com/ChristophervonKlitzing/lightweight_vector_database
 ```
+
+# Requirements
+python>=3.8
