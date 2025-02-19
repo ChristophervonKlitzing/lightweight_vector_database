@@ -43,7 +43,7 @@ class VectorDatabase(ABC, Generic[T]):
         metric is used.
 
         Returns:
-            The k nearest neighbors and their squared distances to the given position.
+            The k nearest neighbors and their distances to the given position.
         """
         raise NotImplementedError
 

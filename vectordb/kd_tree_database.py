@@ -176,14 +176,14 @@ class _KDTree(Generic[T]):
             normal = _create_unit_vector(dim, split_dim)
             support = _create_unit_vector(dim, split_dim, plane_coordinate) # x_0
             # 0 = n^T (x - x_0) = x_{split_index} - plane_coordinate <=> x_{split_index} = plane_coordinate
-            squared_dist = distance_metric.squared_point_2_plane_distance(position, normal, support)
-            return squared_dist
+            dist = distance_metric.point2plane(position, normal, support)
+            return dist
 
         def _find_k_nearest_neighbors(tree: _KDTree, neighbors: list[tuple[VectorID, np.floating]]):
             if tree.is_leaf:
-                squared_dist = distance_metric.squared_point_2_point_distance
+                dist_fn = distance_metric.point2point
                 entries_with_distances = [
-                    (id, squared_dist(position, vec))
+                    (id, dist_fn(position, vec))
                     for id, vec in tree.leaf_vecs.items()
                     if filter(id)
                 ]
@@ -202,8 +202,8 @@ class _KDTree(Generic[T]):
                 children.sort(key=sort_key)
                 children = _get_max_k(children, k) # each child contains at least one element -> max k children
                 current_neighbors = neighbors # assert always sorted in ascending order
-                for child, squared_dist in children: # iterate in ascending order
-                    if  len(current_neighbors) == 0 or squared_dist <= current_neighbors[-1][-1] or len(current_neighbors) < k:
+                for child, dist in children: # iterate in ascending order
+                    if  len(current_neighbors) == 0 or dist <= current_neighbors[-1][-1] or len(current_neighbors) < k:
                         current_neighbors = _find_k_nearest_neighbors(child, current_neighbors)
                     else:
                         break # box_dist is only increasing and the found current neighbors have all a smaller distance than the boxes
@@ -283,8 +283,8 @@ class KDTreeDatabase(VectorDatabase[T]):
         if distance_metric is None:
             distance_metric = self._default_dist_metric
         
-        ids_and_squared_dists = self._tree.find_k_nearest_neighbors(position, k, filter_with_id, distance_metric)
-        neighbors = [(self._id_access[id], squared_dist) for id, squared_dist in ids_and_squared_dists]
+        ids_and_dists = self._tree.find_k_nearest_neighbors(position, k, filter_with_id, distance_metric)
+        neighbors = [(self._id_access[id], dist) for id, dist in ids_and_dists]
         return neighbors
     
     def __len__(self) -> int:

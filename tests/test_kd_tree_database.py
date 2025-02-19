@@ -61,9 +61,9 @@ class TestKDTreeDatabase(unittest.TestCase):
 
         db.insert(position, "awd")
         neighbors = db.find_k_nearest_neighbors(position, k=10)
-        entry, squared_dist = neighbors[0]
+        entry, dist = neighbors[0]
         self.assertTrue(np.array_equal(entry.position, position))
-        self.assertEqual(squared_dist, 0.0)
+        self.assertEqual(dist, 0.0)
 
         self.assertEqual(len(db), db._debug_compute_length_from_tree())
     
