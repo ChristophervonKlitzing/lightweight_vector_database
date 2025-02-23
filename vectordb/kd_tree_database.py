@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import copy
+from dataclasses import dataclass, replace
 from typing import Callable, Dict, Generic, List, Optional, Sequence, Tuple, TypeVar
 import numpy as np
 
@@ -193,6 +194,14 @@ class _KDTree(Generic[T]):
                 new_neighbors = sorted(entries_with_distances + neighbors, key=sort_key)
                 return _get_max_k(new_neighbors, k)
             else:
+                # TODO: Replace this strategy with a greedy approach that only calculates
+                # the distances if necessary.
+                # -> left-list & right-list sorted by index descending and ascending
+                # Always hold only the distances of the first element in the lists.
+                # At each step, always take from the list with the smaller distance and
+                # compute the next distance for the next child in that list.
+                # This greedy approach probably improves speed if the distance computations are expensive.
+
                 child_idx, split_dim, *_ = tree._get_child_index_impl(tree._depth, position)
                 children = [
                     (child_node, distance_to_partition(tree, child_idx, split_dim, i))
@@ -251,13 +260,20 @@ class KDTreeDatabase(VectorDatabase[T]):
         return self._dim
     
     def insert(self, position: Vector, metadata: T) -> VectorID:
+        position = position.copy()
+        position.setflags(write=False)
+        metadata = copy.deepcopy(metadata)
+
         id = self._create_unique_id()
         self._tree.insert(id, position)
         self._id_access[id] = DatabaseEntry(position, metadata)
         return id 
     
     def get_entry(self, id: VectorID) -> Optional[DatabaseEntry[T]]:
-        return self._id_access.get(id, None)
+        entry = self._id_access.get(id, None)
+        if entry is not None:
+            entry = replace(entry, metadata=copy.deepcopy(entry.metadata))
+        return entry
     
     def delete(self, id: VectorID) -> Optional[DatabaseEntry[T]]:
         entry = self._id_access.pop(id, None)
@@ -284,13 +300,16 @@ class KDTreeDatabase(VectorDatabase[T]):
             distance_metric = self._default_dist_metric
         
         ids_and_dists = self._tree.find_k_nearest_neighbors(position, k, filter_with_id, distance_metric)
-        neighbors = [(self._id_access[id], dist) for id, dist in ids_and_dists]
+        neighbors = [(self.get_entry(id), dist) for id, dist in ids_and_dists]
         return neighbors
+    
     
     def __len__(self) -> int:
         return len(self._id_access)
     
     def update_position(self, id: VectorID, new_position: Vector):
+        new_position = new_position.copy()
+        new_position.setflags(write=False)
         entry = self._id_access.get(id)
         self._id_access[id] = DatabaseEntry(new_position, entry.metadata)
         self._tree.delete(id, entry.position)
@@ -301,3 +320,14 @@ class KDTreeDatabase(VectorDatabase[T]):
     
     def get_tree_depth(self) -> int:
         return self._tree.get_depth()
+    
+    def update_metadata(self, id: VectorID, new_metadata: T):
+        new_metadata = copy.deepcopy(new_metadata)
+        entry = self._id_access[id]
+        new_entry = replace(entry, metadata=new_metadata)
+        self._id_access[id] = new_entry
+    
+    def __iter__(self):
+        for vid, entry in self._id_access.items():
+            copied_entry = replace(entry, metadata=copy.deepcopy(entry.metadata))
+            yield vid, copied_entry
